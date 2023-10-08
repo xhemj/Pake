@@ -1,53 +1,52 @@
-name: Build App with Pake CLI
+name: Build App With Pake CLI
 on:
   workflow_dispatch:
     inputs:
       platform:
-        description: "platform"
+        description: 'platform'
         required: true
-        default: "macos-latest"
+        default: 'macos-latest'
         type: choice
         options:
-          - "windows-latest"
-          - "macos-latest"
-          - "ubuntu-20.04"
+          - 'windows-latest'
+          - 'macos-latest'
+          - 'ubuntu-20.04'
       url:
-        description: "[URL]"
+        description: '[URL]'
         required: true
       name:
-        description: "[Name]"
+        description: '[Name]'
         required: true
       icon:
-        description: "[Icon, Optional]"
+        description: '[Icon, Optional]'
         required: false
       width:
-        description: "[Width, Optional]"
+        description: '[Width, Optional]'
         required: false
-        default: "1200"
+        default: '1200'
       height:
-        description: "[Height, Optional]"
+        description: '[Height, Optional]'
         required: false
-        default: "780"
+        default: '780'
       transparent:
-        description: "[Transparent, Optional, MacOS only]"
+        description: '[Transparent, Optional, MacOS only]'
         required: false
         type: boolean
         default: false
       multi_arch:
-        description: "[MultiArch, Optional, MacOS only]"
+        description: '[MultiArch, Optional, MacOS only]'
         required: false
         type: boolean
         default: false
       targets:
-        description: "[Targets, Optional, Linux only]"
+        description: '[Targets, Optional, Linux only]'
         required: false
-        default: "deb"
+        default: 'deb'
         type: choice
         options:
-          - "deb"
-          - "appimage"
-          - "all"
-
+          - 'deb'
+          - 'appimage'
+          - 'all'
 
 jobs:
   build:
@@ -60,7 +59,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: install node
+      - name: Install node
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -86,20 +85,20 @@ jobs:
           toolchain: stable
           target: x86_64-apple-darwin
 
-      - name: install dependencies (ubuntu only)
+      - name: Install dependencies (ubuntu only)
         if: inputs.platform == 'ubuntu-20.04'
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev gnome-video-effects gnome-video-effects-extra
           version: 1.1
 
-      - name: install pake-cli local
+      - name: Install pake-cli local
         shell: bash
         run: |
           echo "install pake on local"
           npm install pake-cli
 
-      - name: rust cache restore
+      - name: Rust cache restore
         uses: actions/cache/restore@v3
         id: cache_store
         with:
@@ -111,10 +110,14 @@ jobs:
             node_modules/pake-cli/src-tauri/target/
           key: ${{ inputs.platform }}-cargo-${{ hashFiles('node_modules/pake-cli/src-tauri/Cargo.lock') }}
 
-      - name: build with pake-cli
-        shell: pwsh
+      - name: Install dependencies
         run: |
-          pwsh ./script/build_with_pake_cli.ps1
+          npm install shelljs
+          npm install axios
+
+      - name: Build with pake-cli
+        run: |
+          node ./script/build_with_pake_cli.js
         env:
           URL: ${{ inputs.url }}
           NAME: ${{ inputs.name }}
@@ -134,7 +137,7 @@ jobs:
           path: node_modules/pake-cli/output/*
           retention-days: 3
 
-      - name: rust cache store
+      - name: Rust cache store
         uses: actions/cache/save@v3
         if: steps.cache_store.outputs.cache-hit != 'true'
         with:
